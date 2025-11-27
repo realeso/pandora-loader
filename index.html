@@ -23,7 +23,6 @@
         border-radius: 16px; 
     }
 
-    /* Верхняя панель */
     .top-bar {
         display: flex; justify-content: flex-end; align-items: center;
         padding: 15px; gap: 8px;
@@ -57,7 +56,6 @@
 
     .close-btn:hover { background: rgba(255, 50, 50, 0.25); color: #ff5555; }
 
-    /* Область страниц */
     .content-wrapper {
         position: relative;
         flex: 1;
@@ -79,16 +77,14 @@
         transform: translateX(0);
     }
 
-    /* --- Главная страница --- */
     .logo-container { margin-bottom: 20px; margin-top: 10px; }
     
-    /* ФИКС ДЛЯ ЛОГОТИПА (НЕЛЬЗЯ КОПИРОВАТЬ И ТЯНУТЬ) */
     .logo-img { 
         width: 115px; height: 115px; 
         filter: invert(53%) sepia(48%) saturate(3065%) hue-rotate(210deg) brightness(101%) contrast(96%) drop-shadow(0 0 20px rgba(130, 132, 248, 0.6));
-        pointer-events: none;      /* клики проходят сквозь */
-        -webkit-user-drag: none;   /* запрет перетаскивания картинки */
-        user-select: none;         /* запрет выделения */
+        pointer-events: none;      
+        -webkit-user-drag: none;   
+        user-select: none;       
     }
     .version-title { font-size: 20px; font-weight: 700; color: #FFFFFF; margin-bottom: 15px; }
     .version-num { color: var(--accent); margin-left: 3px; }
@@ -122,7 +118,7 @@
         border-radius: 3px; box-shadow: 0 0 10px var(--accent); transition: width 0.1s linear;
     }
 
-    /* --- Страница настроек --- */
+  
     .settings-title {
         font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 40px; margin-top: 10px;
         width: 100%; text-align: left; border-bottom: 1px solid var(--line); padding-bottom: 10px;
@@ -161,7 +157,7 @@
     <div class="content-wrapper">
         <div class="page active" id="page-home">
             <div class="logo-container">
-                <!-- ФИКС ДЛЯ ЛОГОТИПА -->
+             
                 <img src="https://realeso.github.io/pandora-loader/logo.svg" class="logo-img" alt="Logo" draggable="false">
             </div>
 
@@ -251,9 +247,9 @@
             }, 200);
         }
 
-        // Логика перетаскивания окна
+      
         window.addEventListener('mousedown', function(e) {
-            // Если клик был не по кнопкам и не по слайдеру - перетаскиваем
+        
             if (['BUTTON', 'INPUT'].includes(e.target.tagName) || 
                 e.target.classList.contains('control-btn') || 
                 e.target.closest('.control-btn') ||
