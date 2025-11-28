@@ -87,8 +87,6 @@
         user-select: none;       
     }
     .version-title { font-size: 20px; font-weight: 700; color: #FFFFFF; margin-bottom: 15px; }
-    
-    /* Добавлен отступ слева для номера версии */
     .version-num { color: var(--accent); margin-left: 10px; }
     
     .desc { font-size: 13px; color: var(--text-mute); line-height: 1.6; margin-bottom: 50px; max-width: 320px; }
@@ -210,109 +208,4 @@
             if(window.chrome && window.chrome.webview) {
                 window.chrome.webview.postMessage("app_ready");
                 
-                window.chrome.webview.addEventListener('message', event => {
-                    const msg = event.data;
-                    
-                    if(msg === "download_complete") {
-                        const btn = document.getElementById('btn-launch');
-                        document.getElementById('loader-ui').classList.remove('active');
-                        btn.classList.remove('hidden'); 
-                        btn.disabled = false;
-                        btn.innerText = "Запустить";
-                        isReadyToLaunch = true;
-                    }
-                    else if(msg === "download_error") {
-                        document.getElementById('loader-ui').classList.remove('active');
-                        const btn = document.getElementById('btn-launch');
-                        btn.classList.remove('hidden');
-                        btn.innerText = "Ошибка загрузки";
-                        btn.disabled = false; 
-                    }
-                    else if(msg.startsWith("status_update:")) {
-                        let text = msg.split(":")[1];
-                        document.getElementById('btn-launch').classList.add('hidden');
-                        document.getElementById('loader-ui').classList.add('active');
-                        document.getElementById('loader-status').innerText = text;
-                        document.getElementById('progress-fill').style.width = '100%'; 
-                    }
-                    else if(msg.startsWith("download_progress:")) {
-                        let percent = msg.split(":")[1];
-                        document.getElementById('progress-fill').style.width = percent + '%';
-                        document.getElementById('loader-status').innerText = "Скачивание: " + percent + "%";
-                    }
-                    else if(msg.startsWith("version_info:")) {
-                        document.getElementById('version-text').innerText = msg.split(":")[1];
-                    }
-                });
-            }
-        });
-
-        function closeApp() { window.chrome.webview.postMessage("close_app"); }
-        function minimizeApp() { window.chrome.webview.postMessage("minimize_window"); }
-        
-        function reinstallApp() {
-             toggleSettings(); 
-             document.getElementById('btn-launch').disabled = true;
-             document.getElementById('btn-launch').innerText = "Ожидание...";
-             window.chrome.webview.postMessage("reinstall");
-        }
-
-        function toggleSettings() {
-            let home = document.getElementById('page-home');
-            let settings = document.getElementById('page-settings');
-            let btn = document.getElementById('btn-settings');
-            
-            if (home.classList.contains('active')) {
-                home.classList.remove('active');
-                settings.classList.add('active');
-                btn.classList.add('active');
-            } else {
-                settings.classList.remove('active');
-                home.classList.add('active');
-                btn.classList.remove('active');
-            }
-        }
-
-        function updateRam(val) {
-            currentRam = val;
-            document.getElementById('ram-display').innerText = val + " MB";
-            localStorage.setItem("pandora_ram", val);
-        }
-
-        function launchGame() {
-            let btn = document.getElementById('btn-launch');
-            
-            if(btn.innerText === "Ошибка загрузки") {
-                btn.innerText = "Проверка...";
-                btn.disabled = true;
-                window.chrome.webview.postMessage("reinstall");
-                return;
-            }
-
-            if(!isReadyToLaunch) return;
-
-            // Блокируем кнопку, пишем Запуск... и отправляем сигнал
-            btn.innerText = "Запуск...";
-            btn.disabled = true;
-            window.chrome.webview.postMessage("launch_game:" + currentRam);
-            
-            // Через 3 секунды сбрасываем кнопку обратно
-            setTimeout(() => {
-                btn.innerText = "Запустить";
-                btn.disabled = false;
-            }, 3000);
-        }
-
-        window.addEventListener('mousedown', function(e) {
-            if (['BUTTON', 'INPUT'].includes(e.target.tagName) || 
-                e.target.classList.contains('control-btn') || 
-                e.target.closest('.control-btn') ||
-                e.target.closest('.launch-btn') ||
-                e.target.closest('.reinstall-btn') ||
-                e.target.closest('.slider-group')) return;
-            
-            window.chrome.webview.postMessage("drag_window");
-        });
-    </script>
-</body>
-</html>
+                window.chrome.webvi
