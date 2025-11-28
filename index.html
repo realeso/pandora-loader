@@ -118,7 +118,6 @@
         border-radius: 3px; box-shadow: 0 0 10px var(--accent); transition: width 0.1s linear;
     }
 
-  
     .settings-title {
         font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 40px; margin-top: 10px;
         width: 100%; text-align: left; border-bottom: 1px solid var(--line); padding-bottom: 10px;
@@ -157,7 +156,6 @@
     <div class="content-wrapper">
         <div class="page active" id="page-home">
             <div class="logo-container">
-             
                 <img src="https://realeso.github.io/pandora-loader/logo.svg" class="logo-img" alt="Logo" draggable="false">
             </div>
 
@@ -195,6 +193,9 @@
     </div>
 
     <script>
+   
+        let currentRam = 4096;
+
         function closeApp() { window.chrome.webview.postMessage("close_app"); }
         function minimizeApp() { window.chrome.webview.postMessage("minimize_window"); }
         
@@ -215,6 +216,7 @@
         }
 
         function updateRam(val) {
+            currentRam = val; 
             document.getElementById('ram-display').innerText = val + " MB";
         }
 
@@ -235,9 +237,12 @@
                 let timer = setInterval(() => {
                     if (width >= 100) {
                         clearInterval(timer);
-                        status.innerText = "100%";
-                        // Отправляем сообщение в C++
-                        setTimeout(() => { window.chrome.webview.postMessage("start_inject"); }, 400);
+                        status.innerText = "Запуск...";
+                        
+                        
+                        setTimeout(() => { 
+                            window.chrome.webview.postMessage("start_inject:" + currentRam); 
+                        }, 400);
                     } else {
                         width++;
                         fill.style.width = width + '%';
@@ -247,9 +252,7 @@
             }, 200);
         }
 
-      
         window.addEventListener('mousedown', function(e) {
-        
             if (['BUTTON', 'INPUT'].includes(e.target.tagName) || 
                 e.target.classList.contains('control-btn') || 
                 e.target.closest('.control-btn') ||
