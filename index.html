@@ -87,7 +87,9 @@
         user-select: none;       
     }
     .version-title { font-size: 20px; font-weight: 700; color: #FFFFFF; margin-bottom: 15px; }
-    .version-num { color: var(--accent); margin-left: 3px; }
+    
+    /* Добавлен отступ слева для номера версии */
+    .version-num { color: var(--accent); margin-left: 10px; }
     
     .desc { font-size: 13px; color: var(--text-mute); line-height: 1.6; margin-bottom: 50px; max-width: 320px; }
 
@@ -168,7 +170,7 @@
             </div>
 
             <div class="action-container">
-                <button class="launch-btn" id="btn-launch" disabled onclick="startInject()">Проверка...</button>
+                <button class="launch-btn" id="btn-launch" disabled onclick="launchGame()">Проверка...</button>
                 
                 <div class="loader-wrapper" id="loader-ui">
                     <div class="loader-text" id="loader-status">0%</div>
@@ -277,20 +279,9 @@
             localStorage.setItem("pandora_ram", val);
         }
 
-        function resetState() {
+        function launchGame() {
             let btn = document.getElementById('btn-launch');
-            let loader = document.getElementById('loader-ui');
-            let fill = document.getElementById('progress-fill');
-            let status = document.getElementById('loader-status');
-
-            loader.classList.remove('active');
-            btn.classList.remove('hidden');
-            btn.innerText = "Запустить";
-            btn.disabled = false;
-        }
-
-        function startInject() {
-            let btn = document.getElementById('btn-launch');
+            
             if(btn.innerText === "Ошибка загрузки") {
                 btn.innerText = "Проверка...";
                 btn.disabled = true;
@@ -300,14 +291,16 @@
 
             if(!isReadyToLaunch) return;
 
+            // Блокируем кнопку, пишем Запуск... и отправляем сигнал
             btn.innerText = "Запуск...";
             btn.disabled = true;
+            window.chrome.webview.postMessage("launch_game:" + currentRam);
             
-            // Сразу отправляем команду запуска без фейкового инжекта
-            setTimeout(() => { 
-                window.chrome.webview.postMessage("start_inject:" + currentRam);
-                setTimeout(resetState, 2000); 
-            }, 200);
+            // Через 3 секунды сбрасываем кнопку обратно
+            setTimeout(() => {
+                btn.innerText = "Запустить";
+                btn.disabled = false;
+            }, 3000);
         }
 
         window.addEventListener('mousedown', function(e) {
