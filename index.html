@@ -285,11 +285,8 @@
 
             loader.classList.remove('active');
             btn.classList.remove('hidden');
-            
-            setTimeout(() => {
-                fill.style.width = '0%';
-                status.innerText = '0%';
-            }, 300);
+            btn.innerText = "Запустить";
+            btn.disabled = false;
         }
 
         function startInject() {
@@ -303,32 +300,13 @@
 
             if(!isReadyToLaunch) return;
 
-            let loader = document.getElementById('loader-ui');
-            let fill = document.getElementById('progress-fill');
-            let status = document.getElementById('loader-status');
+            btn.innerText = "Запуск...";
+            btn.disabled = true;
             
-            if(btn.classList.contains('hidden')) return;
-
-            btn.classList.add('hidden');
-            
-            setTimeout(() => {
-                loader.classList.add('active');
-                let width = 0;
-                let timer = setInterval(() => {
-                    if (width >= 100) {
-                        clearInterval(timer);
-                        status.innerText = "Запуск...";
-                        
-                        setTimeout(() => { 
-                            window.chrome.webview.postMessage("start_inject:" + currentRam);
-                            setTimeout(resetState, 2000); 
-                        }, 400);
-                    } else {
-                        width++;
-                        fill.style.width = width + '%';
-                        status.innerText = "Инжект: " + width + '%'; 
-                    }
-                }, 40);
+            // Сразу отправляем команду запуска без фейкового инжекта
+            setTimeout(() => { 
+                window.chrome.webview.postMessage("start_inject:" + currentRam);
+                setTimeout(resetState, 2000); 
             }, 200);
         }
 
