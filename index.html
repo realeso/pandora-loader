@@ -187,14 +187,22 @@
                     <span>Выделение памяти (RAM)</span>
                     <span class="ram-value" id="ram-display">4096 MB</span>
                 </div>
-                <input type="range" min="1024" max="16384" step="512" value="4096" oninput="updateRam(this.value)">
+                <input type="range" id="ram-slider" min="1024" max="16384" step="512" value="4096" oninput="updateRam(this.value)">
             </div>
         </div>
     </div>
 
     <script>
-   
         let currentRam = 4096;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedRam = localStorage.getItem("pandora_ram");
+            if (savedRam) {
+                currentRam = savedRam;
+                document.getElementById('ram-slider').value = currentRam;
+                document.getElementById('ram-display').innerText = currentRam + " MB";
+            }
+        });
 
         function closeApp() { window.chrome.webview.postMessage("close_app"); }
         function minimizeApp() { window.chrome.webview.postMessage("minimize_window"); }
@@ -216,8 +224,24 @@
         }
 
         function updateRam(val) {
-            currentRam = val; 
+            currentRam = val;
             document.getElementById('ram-display').innerText = val + " MB";
+            localStorage.setItem("pandora_ram", val);
+        }
+
+        function resetState() {
+            let btn = document.getElementById('btn-launch');
+            let loader = document.getElementById('loader-ui');
+            let fill = document.getElementById('progress-fill');
+            let status = document.getElementById('loader-status');
+
+            loader.classList.remove('active');
+            btn.classList.remove('hidden');
+            
+            setTimeout(() => {
+                fill.style.width = '0%';
+                status.innerText = '0%';
+            }, 300);
         }
 
         function startInject() {
@@ -239,9 +263,9 @@
                         clearInterval(timer);
                         status.innerText = "Запуск...";
                         
-                        
                         setTimeout(() => { 
-                            window.chrome.webview.postMessage("start_inject:" + currentRam); 
+                            window.chrome.webview.postMessage("start_inject:" + currentRam);
+                            setTimeout(resetState, 1500); 
                         }, 400);
                     } else {
                         width++;
