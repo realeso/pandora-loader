@@ -92,13 +92,17 @@
     .desc { font-size: 13px; color: var(--text-mute); line-height: 1.6; margin-bottom: 50px; max-width: 320px; }
 
     .action-container { width: 100%; height: 50px; position: relative; }
+    
     .launch-btn {
         width: 100%; height: 100%; background: var(--accent);
         border: none; border-radius: 12px; color: white; font-size: 16px; font-weight: 600;
         cursor: pointer; transition: 0.3s; box-shadow: 0 4px 20px rgba(130, 132, 248, 0.25);
     }
-    .launch-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(130, 132, 248, 0.4); }
-    .launch-btn:active { transform: scale(0.98); }
+    .launch-btn:disabled {
+        background: #333; cursor: not-allowed; color: #777; box-shadow: none;
+    }
+    .launch-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(130, 132, 248, 0.4); }
+    .launch-btn:active:not(:disabled) { transform: scale(0.98); }
     .launch-btn.hidden { opacity: 0; pointer-events: none; transform: scale(0.9); }
 
     .loader-wrapper {
@@ -108,10 +112,7 @@
     }
     .loader-wrapper.active { opacity: 1; transform: translateY(0); }
     
-    .loader-text {
-        font-size: 14px; color: white; margin-bottom: 8px; font-weight: 700; 
-    }
-    
+    .loader-text { font-size: 14px; color: white; margin-bottom: 8px; font-weight: 700; }
     .loader-track { width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
     .loader-fill {
         height: 100%; width: 0%; background: var(--accent);
@@ -127,21 +128,20 @@
     .slider-label { font-size: 13px; color: var(--text-mute); margin-bottom: 10px; display: flex; justify-content: space-between; }
     .ram-value { color: var(--accent); font-weight: bold; }
 
-    input[type=range] {
-        -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer;
-    }
+    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
     input[type=range]:focus { outline: none; }
-    
-    input[type=range]::-webkit-slider-runnable-track {
-        width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px;
-    }
-    
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; }
     input[type=range]::-webkit-slider-thumb {
         -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%;
-        background: #fff; margin-top: -6px;
-        box-shadow: 0 0 10px rgba(255,255,255,0.5); transition: 0.2s;
+        background: #fff; margin-top: -6px; box-shadow: 0 0 10px rgba(255,255,255,0.5); transition: 0.2s;
     }
     input[type=range]:hover::-webkit-slider-thumb { background: var(--accent); }
+
+    .reinstall-btn {
+        width: 100%; background: transparent; border: 1px solid rgba(255, 50, 50, 0.4);
+        color: #ff5555; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .reinstall-btn:hover { background: rgba(255, 50, 50, 0.1); border-color: #ff5555; }
 </style>
 </head>
 <body>
@@ -160,15 +160,15 @@
             </div>
 
             <div class="version-title">
-                Версия<span class="version-num">1.0.0</span>
+                Версия<span class="version-num" id="version-text">...</span>
             </div>
 
             <div class="desc">
-                Pandora — приватный DLC-клиент для Minecraft. Превосходный Combat, плавный Movement и регулярные обновления для вашей комфортной игры.
+                Pandora — приватный DLC-клиент для Minecraft. Превосходный Combat, плавный Movement и регулярные обновления.
             </div>
 
             <div class="action-container">
-                <button class="launch-btn" id="btn-launch" onclick="startInject()">Запустить</button>
+                <button class="launch-btn" id="btn-launch" disabled onclick="startInject()">Проверка...</button>
                 
                 <div class="loader-wrapper" id="loader-ui">
                     <div class="loader-text" id="loader-status">0%</div>
@@ -181,7 +181,6 @@
 
         <div class="page" id="page-settings">
             <div class="settings-title">Настройки</div>
-            
             <div class="slider-group">
                 <div class="slider-label">
                     <span>Выделение памяти (RAM)</span>
@@ -189,11 +188,14 @@
                 </div>
                 <input type="range" id="ram-slider" min="1024" max="16384" step="512" value="4096" oninput="updateRam(this.value)">
             </div>
+            
+            <button class="reinstall-btn" onclick="reinstallApp()">Переустановить клиент</button>
         </div>
     </div>
 
     <script>
         let currentRam = 4096;
+        let isReadyToLaunch = false;
 
         document.addEventListener("DOMContentLoaded", () => {
             const savedRam = localStorage.getItem("pandora_ram");
@@ -202,11 +204,53 @@
                 document.getElementById('ram-slider').value = currentRam;
                 document.getElementById('ram-display').innerText = currentRam + " MB";
             }
+            
+            if(window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage("app_ready");
+                
+                window.chrome.webview.addEventListener('message', event => {
+                    const msg = event.data;
+                    
+                    if(msg === "download_complete") {
+                        const btn = document.getElementById('btn-launch');
+                        document.getElementById('loader-ui').classList.remove('active');
+                        btn.classList.remove('hidden'); 
+                        btn.disabled = false;
+                        btn.innerText = "Запустить";
+                        isReadyToLaunch = true;
+                    }
+                    else if(msg === "download_error") {
+                        document.getElementById('btn-launch').innerText = "Ошибка загрузки";
+                    }
+                    else if(msg.startsWith("status_update:")) {
+                        let text = msg.split(":")[1];
+                        document.getElementById('btn-launch').classList.add('hidden');
+                        document.getElementById('loader-ui').classList.add('active');
+                        document.getElementById('loader-status').innerText = text;
+                        document.getElementById('progress-fill').style.width = '100%'; 
+                    }
+                    else if(msg.startsWith("download_progress:")) {
+                        let percent = msg.split(":")[1];
+                        document.getElementById('progress-fill').style.width = percent + '%';
+                        document.getElementById('loader-status').innerText = "Скачивание: " + percent + "%";
+                    }
+                    else if(msg.startsWith("version_info:")) {
+                        document.getElementById('version-text').innerText = msg.split(":")[1];
+                    }
+                });
+            }
         });
 
         function closeApp() { window.chrome.webview.postMessage("close_app"); }
         function minimizeApp() { window.chrome.webview.postMessage("minimize_window"); }
         
+        function reinstallApp() {
+             toggleSettings(); 
+             document.getElementById('btn-launch').disabled = true;
+             document.getElementById('btn-launch').innerText = "Ожидание...";
+             window.chrome.webview.postMessage("reinstall");
+        }
+
         function toggleSettings() {
             let home = document.getElementById('page-home');
             let settings = document.getElementById('page-settings');
@@ -245,6 +289,8 @@
         }
 
         function startInject() {
+            if(!isReadyToLaunch) return;
+
             let btn = document.getElementById('btn-launch');
             let loader = document.getElementById('loader-ui');
             let fill = document.getElementById('progress-fill');
@@ -256,7 +302,6 @@
             
             setTimeout(() => {
                 loader.classList.add('active');
-                
                 let width = 0;
                 let timer = setInterval(() => {
                     if (width >= 100) {
@@ -265,12 +310,12 @@
                         
                         setTimeout(() => { 
                             window.chrome.webview.postMessage("start_inject:" + currentRam);
-                            setTimeout(resetState, 1500); 
+                            setTimeout(resetState, 2000); 
                         }, 400);
                     } else {
                         width++;
                         fill.style.width = width + '%';
-                        status.innerText = width + '%'; 
+                        status.innerText = "Инжект: " + width + '%'; 
                     }
                 }, 40);
             }, 200);
@@ -281,6 +326,7 @@
                 e.target.classList.contains('control-btn') || 
                 e.target.closest('.control-btn') ||
                 e.target.closest('.launch-btn') ||
+                e.target.closest('.reinstall-btn') ||
                 e.target.closest('.slider-group')) return;
             
             window.chrome.webview.postMessage("drag_window");
