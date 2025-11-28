@@ -220,7 +220,11 @@
                         isReadyToLaunch = true;
                     }
                     else if(msg === "download_error") {
-                        document.getElementById('btn-launch').innerText = "Ошибка загрузки";
+                        document.getElementById('loader-ui').classList.remove('active');
+                        const btn = document.getElementById('btn-launch');
+                        btn.classList.remove('hidden');
+                        btn.innerText = "Ошибка загрузки";
+                        btn.disabled = false; 
                     }
                     else if(msg.startsWith("status_update:")) {
                         let text = msg.split(":")[1];
@@ -289,9 +293,16 @@
         }
 
         function startInject() {
+            let btn = document.getElementById('btn-launch');
+            if(btn.innerText === "Ошибка загрузки") {
+                btn.innerText = "Проверка...";
+                btn.disabled = true;
+                window.chrome.webview.postMessage("reinstall");
+                return;
+            }
+
             if(!isReadyToLaunch) return;
 
-            let btn = document.getElementById('btn-launch');
             let loader = document.getElementById('loader-ui');
             let fill = document.getElementById('progress-fill');
             let status = document.getElementById('loader-status');
